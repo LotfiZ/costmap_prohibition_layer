@@ -38,6 +38,7 @@
 
 #include <costmap_prohibition_layer/costmap_prohibition_layer.h>
 #include <pluginlib/class_list_macros.h>
+#include "yaml-cpp/yaml.h"
 
 PLUGINLIB_EXPORT_CLASS(costmap_prohibition_layer_namespace::CostmapProhibitionLayer, costmap_2d::Layer)
 
@@ -75,8 +76,8 @@ void CostmapProhibitionLayer::onInitialize()
   
   // reading the prohibition areas out of the namespace of this plugin!
   // e.g.: "move_base/global_costmap/prohibition_layer/prohibition_areas"
-  std::string params = "prohibition_areas";
-  if (!parseProhibitionListFromYaml(&nh, params))
+  std::string params = "/home/agv-fl250/agv_fl250_ws/src/costmap_prohibition_layer/cfg/zones_interdites.yaml";
+  if (!parseProhibitionListFromYaml(params))
     ROS_ERROR_STREAM("Reading prohibition areas from '" << nh.getNamespace() << "/" << params << "' failed!");
   
   _fill_polygons = true;
@@ -326,7 +327,7 @@ void CostmapProhibitionLayer::rasterizePolygon(const std::vector<PointInt>& poly
   }
 
 // load prohibition positions out of the rosparam server
-bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhandle, const std::string &param)
+bool CostmapProhibitionLayer::parseProhibitionListFromYaml(const std::string &param)
 {
   std::lock_guard<std::mutex> l(_data_mutex);
   std::unordered_map<std::string, geometry_msgs::Pose> map_out;
@@ -335,8 +336,10 @@ bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhan
 
   bool ret_val = true;
 
-  if (nhandle->getParam(param, param_yaml))
+  try
   {
+    YAML::Node yaml_file = YAML::LoadFile("test.yaml");
+    param_yaml = yaml_file;
     if (param_yaml.getType() == XmlRpc::XmlRpcValue::TypeArray)  // list of goals
     {
       for (int i = 0; i < param_yaml.size(); ++i)
@@ -430,7 +433,7 @@ bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhan
       ret_val = false;
     }
   }
-  else
+  catch(const YAML::ParserException& ex)
   {
     ROS_ERROR_STREAM("Prohibition Layer: Cannot read " << param << " from parameter server");
     ret_val = false;

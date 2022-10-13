@@ -179,7 +179,7 @@ private:
    * @return bool       true if the parsing was successful
    *                    false if it wasn't
     */
-  bool parseProhibitionListFromYaml(ros::NodeHandle* nhandle, const std::string& param);
+  bool parseProhibitionListFromYaml(const std::string& param);
 
   /**
  * get a geometry_msgs::Point from a YAML-Array
