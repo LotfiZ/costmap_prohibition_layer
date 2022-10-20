@@ -49,6 +49,7 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_prohibition_layer/CostmapProhibitionLayerConfig.h>
 #include <dynamic_reconfigure/server.h>
+#include "yaml-cpp/yaml.h"
 
 #include <unordered_map>
 
@@ -179,7 +180,7 @@ private:
    * @return bool       true if the parsing was successful
    *                    false if it wasn't
     */
-  bool parseProhibitionListFromYaml(ros::NodeHandle* nhandle, const std::string& param);
+  bool parseProhibitionListFromYaml(const std::string& param);
 
   /**
  * get a geometry_msgs::Point from a YAML-Array
@@ -191,7 +192,7 @@ private:
  * @return bool       true if the determining was successful
  *                    false if it wasn't
   */
-  bool getPoint(XmlRpc::XmlRpcValue& val, geometry_msgs::Point& point);
+  bool getPoint(const YAML::Node& val, geometry_msgs::Point& point);
 
   dynamic_reconfigure::Server<CostmapProhibitionLayerConfig>* _dsrv;            //!< dynamic_reconfigure server for the costmap
   std::mutex _data_mutex;                                                       //!< mutex for the accessing _prohibition_points and _prohibition_polygons

@@ -75,8 +75,8 @@ void CostmapProhibitionLayer::onInitialize()
   
   // reading the prohibition areas out of the namespace of this plugin!
   // e.g.: "move_base/global_costmap/prohibition_layer/prohibition_areas"
-  std::string params = "prohibition_areas";
-  if (!parseProhibitionListFromYaml(&nh, params))
+  std::string params = "/home/agv-fl250/agv_fl250_ws/src/costmap_prohibition_layer/cfg/zones.yaml";
+  if (!parseProhibitionListFromYaml(params))
     ROS_ERROR_STREAM("Reading prohibition areas from '" << nh.getNamespace() << "/" << params << "' failed!");
   
   _fill_polygons = true;
@@ -326,22 +326,22 @@ void CostmapProhibitionLayer::rasterizePolygon(const std::vector<PointInt>& poly
   }
 
 // load prohibition positions out of the rosparam server
-bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhandle, const std::string &param)
+bool CostmapProhibitionLayer::parseProhibitionListFromYaml(const std::string &param)
 {
   std::lock_guard<std::mutex> l(_data_mutex);
   std::unordered_map<std::string, geometry_msgs::Pose> map_out;
 
-  XmlRpc::XmlRpcValue param_yaml;
+  const YAML::Node param_yaml = YAML::LoadFile(param);
 
   bool ret_val = true;
 
-  if (nhandle->getParam(param, param_yaml))
+  try
   {
-    if (param_yaml.getType() == XmlRpc::XmlRpcValue::TypeArray)  // list of goals
+    if (param_yaml.IsSequence())  // list of goals
     {
       for (int i = 0; i < param_yaml.size(); ++i)
       {
-        if (param_yaml[i].getType() == XmlRpc::XmlRpcValue::TypeArray)
+        if (param_yaml[i].IsSequence())
         {
           std::vector<geometry_msgs::Point> vector_to_add;
 
@@ -352,24 +352,16 @@ bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhan
            **************************************** */
 
           // add a point
-          if (param_yaml[i].size() == 1)
+          if (param_yaml[i][0].size() == 0)
           {
             geometry_msgs::Point point;
-            ret_val = getPoint(param_yaml[i][0], point);
+            ret_val = getPoint(param_yaml[i], point);
             _prohibition_points.push_back(point);
           }
           // add a line
           else if (param_yaml[i].size() == 2)
           {
-            if (param_yaml[i][0].getType() == XmlRpc::XmlRpcValue::TypeDouble ||
-	      param_yaml[i][0].getType() == XmlRpc::XmlRpcValue::TypeInt)
-            {
-              // add a lonely point
-              geometry_msgs::Point point;
-              ret_val = getPoint(param_yaml[i], point);
-              _prohibition_points.push_back(point);
-            }
-            else
+            
             {
               // add a line!
               geometry_msgs::Point point_A;
@@ -430,7 +422,7 @@ bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhan
       ret_val = false;
     }
   }
-  else
+  catch(const YAML::ParserException& ex)
   {
     ROS_ERROR_STREAM("Prohibition Layer: Cannot read " << param << " from parameter server");
     ret_val = false;
@@ -439,22 +431,15 @@ bool CostmapProhibitionLayer::parseProhibitionListFromYaml(ros::NodeHandle *nhan
 }
 
 // get a point out of the XML Type into a geometry_msgs::Point
-bool CostmapProhibitionLayer::getPoint(XmlRpc::XmlRpcValue &val, geometry_msgs::Point &point)
+bool CostmapProhibitionLayer::getPoint(const YAML::Node &val, geometry_msgs::Point &point)
 {
   try
   {
     // check if there a two values for the coordinate
-    if (val.getType() == XmlRpc::XmlRpcValue::TypeArray && val.size() == 2)
+    if (val.IsSequence() && val.size() == 2)
     {
-      auto convDouble = [](XmlRpc::XmlRpcValue &val) -> double
-      {
-        if (val.getType() == XmlRpc::XmlRpcValue::TypeInt)  // XmlRpc cannot cast int to double
-          return int(val);
-        return val;  // if not double, an exception is thrown;
-      };
-
-      point.x = convDouble(val[0]);
-      point.y = convDouble(val[1]);
+      point.x = val[0].as<double>();
+      point.y = val[1].as<double>();
       point.z = 0.0;
       return true;
     }
@@ -464,9 +449,9 @@ bool CostmapProhibitionLayer::getPoint(XmlRpc::XmlRpcValue &val, geometry_msgs::
       return false;
     }
   }
-  catch (const XmlRpc::XmlRpcException &ex)
+  catch (const YAML::ParserException &ex)
   {
-    ROS_ERROR_STREAM("Prohibition Layer: Cannot add current point: " << ex.getMessage());
+    ROS_ERROR_STREAM("Prohibition Layer: Cannot add current point: ");
     return false;
   }
 }

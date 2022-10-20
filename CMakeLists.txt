@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+#find_package(rapidxml REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -114,7 +114,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES costmap_prohibition_layer
   CATKIN_DEPENDS costmap_2d dynamic_reconfigure
-  DEPENDS
+  DEPENDS 
 )
 
 ###########
@@ -129,7 +129,7 @@ include_directories(${catkin_INCLUDE_DIRS} include)
 ## Declare a C++ library
 
 add_library(costmap_prohibition_layer src/costmap_prohibition_layer.cpp)
-target_link_libraries(costmap_prohibition_layer ${catkin_LIBRARIES})
+target_link_libraries(costmap_prohibition_layer ${catkin_LIBRARIES} yaml-cpp)
 
 # Dynamic reconfigure: make sure configure headers are built before any node using them
 add_dependencies(costmap_prohibition_layer ${PROJECT_NAME}_gencfg)
