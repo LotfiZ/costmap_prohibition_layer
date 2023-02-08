@@ -75,7 +75,7 @@ void CostmapProhibitionLayer::onInitialize()
   
   // reading the prohibition areas out of the namespace of this plugin!
   // e.g.: "move_base/global_costmap/prohibition_layer/prohibition_areas"
-  std::string params = "/home/agv-fl250/agv_fl250_ws/src/costmap_prohibition_layer/cfg/zones.yaml";
+  std::string params = "/home/agv-fl250/noovelia_stack_ws/src/noovelia_fl_stack/costmap_prohibition_layer/cfg/zones_gr.yaml";
   if (!parseProhibitionListFromYaml(params))
     ROS_ERROR_STREAM("Reading prohibition areas from '" << nh.getNamespace() << "/" << params << "' failed!");
   
