@@ -39,6 +39,7 @@
 #include <costmap_prohibition_layer/costmap_prohibition_layer.h>
 #include <pluginlib/class_list_macros.h>
 
+
 PLUGINLIB_EXPORT_CLASS(costmap_prohibition_layer_namespace::CostmapProhibitionLayer, costmap_2d::Layer)
 
 using costmap_2d::LETHAL_OBSTACLE;
@@ -59,6 +60,7 @@ CostmapProhibitionLayer::~CostmapProhibitionLayer()
 void CostmapProhibitionLayer::onInitialize()
 {
   ros::NodeHandle nh("~/" + name_);
+  ros::NodeHandle nh_pub;
   current_ = true;
 
   _dsrv = new dynamic_reconfigure::Server<CostmapProhibitionLayerConfig>(nh);
@@ -75,9 +77,22 @@ void CostmapProhibitionLayer::onInitialize()
   
   // reading the prohibition areas out of the namespace of this plugin!
   // e.g.: "move_base/global_costmap/prohibition_layer/prohibition_areas"
-  std::string params = "/home/agv-fl250/noovelia_stack_ws/src/noovelia_fl_stack/costmap_prohibition_layer/cfg/zones_gr.yaml";
-  if (!parseProhibitionListFromYaml(params))
-    ROS_ERROR_STREAM("Reading prohibition areas from '" << nh.getNamespace() << "/" << params << "' failed!");
+
+  std::string path = ros::package::getPath("costmap_prohibition_layer");
+
+  if (nh_pub.getParam("zones_file",zones_file_))
+    {
+      path = path + "/cfg/"+ zones_file_;
+    }
+  else
+    {
+      path = path + "/cfg/empty.yaml";
+      
+    }
+
+  
+  if (!parseProhibitionListFromYaml(path))
+    ROS_ERROR_STREAM("Reading prohibition areas from '" << nh.getNamespace() << "/" << path << "' failed!");
   
   _fill_polygons = true;
   nh.param("fill_polygons", _fill_polygons, _fill_polygons);

@@ -50,7 +50,7 @@
 #include <costmap_prohibition_layer/CostmapProhibitionLayerConfig.h>
 #include <dynamic_reconfigure/server.h>
 #include "yaml-cpp/yaml.h"
-
+#include <ros/package.h>
 #include <unordered_map>
 
 namespace costmap_prohibition_layer_namespace
@@ -201,6 +201,7 @@ private:
   std::vector<geometry_msgs::Point> _prohibition_points;                        //!< vector to save the lonely points in source coordinates
   std::vector<std::vector<geometry_msgs::Point>> _prohibition_polygons;         //!< vector to save the polygons (including lines) in source coordinates
   double _min_x, _min_y, _max_x, _max_y;                                        //!< cached map bounds
+  std::string zones_file_;
 };
 }
 #endif
